@@ -63,6 +63,18 @@ def get_unique_item_ngram_matrix(ngram_matrix, item_ind, second_order = False, i
     new_ngram_list = sparse.vstack(new_ngram_list) # change output list format
     return new_ngram_list,ngram_counts
 
+def get_item_ngram_matrix(ngram_matrix, item_ind, second_order = False, ignore_frequency = False):
+    
+    item = ngram_matrix[sparse.find(ngram_matrix[:,item_ind])[0]] # get instances where item occurs
+    
+    # if second order, set item ind to zero
+    if second_order:
+        item[:,item_ind] = 0
+        # drop zero rows
+        item = item[np.where(item.sum(1) != 0)[0]]
+    
+    return item
+
 #ngram_sims = cosine_table_self(ngram_matrix)
 #ngram_inds = list(np.arange(ngram_matrix.shape[0]))
 #
@@ -98,8 +110,9 @@ def cosine_table_self(vects): # get cosine table, input one matrix
 #    jaccard = len(item_1.intersection(item_2)) / len(item_1.union(item_2))
 #    
 #    return jaccard
-    
-def get_jaccard(item_1, item_2):
+
+# strict jaccard
+def get_jaccard_1(item_1, item_2):
     '''
     wd: word by document matrix in sparse data structure
     ind_1: index of first word for comparison
@@ -125,6 +138,55 @@ def get_jaccard(item_1, item_2):
     jaccard_second_order = num / denom
     
     return jaccard_second_order
+
+# jaccard as averaged cosine matrix
+def get_jaccard_2(item_1, item_2):
+    '''
+    wd: word by document matrix in sparse data structure
+    ind_1: index of first word for comparison
+    ind_2: index of second word for comparison
+    '''
+    
+#    item_1 = items[i]
+#    item_2 = items[j]
+    
+    val = np.mean(cosine_table(item_1,item_2))
+        
+    return val
+
+# define jaccard as ((row.max.sum)+(col.max.sum))/(num_rows+num_cols)
+def get_jaccard_3(item_1, item_2):
+    '''
+    wd: word by document matrix in sparse data structure
+    ind_1: index of first word for comparison
+    ind_2: index of second word for comparison
+    '''
+    
+#    item_1 = items[i]
+#    item_2 = items[j]
+    
+    vals = cosine_table(item_1,item_2)
+    num = vals.max(0).sum() + vals.max(1).sum()
+    denom = np.sum(vals.shape)
+        
+    return num/denom
+
+# define jaccard as ((row.min.sum)+(col.min.sum))/(num_rows+num_cols)
+def get_jaccard_4(item_1, item_2):
+    '''
+    wd: word by document matrix in sparse data structure
+    ind_1: index of first word for comparison
+    ind_2: index of second word for comparison
+    '''
+    
+#    item_1 = items[i]
+#    item_2 = items[j]
+    
+    vals = cosine_table(item_1,item_2)
+    num = vals.min(0).sum() + vals.min(1).sum()
+    denom = np.sum(vals.shape)
+        
+    return num/denom
 
 # code variant of jaccard - second order similarity
         
@@ -179,16 +241,25 @@ def get_jaccard_matrix(wd, ngram, second_order = False, ignore_frequency = False
     for i in np.arange(len(word_inds)):
         print(i)
         for j in np.arange(i, len(word_inds)):
-            jaccard[i, j] = get_jaccard(items[i], items[j])
+            jaccard[i, j] = get_jaccard_1(items[i], items[j])
             jaccard[j, i] = jaccard[i, j]
     return jaccard
             
-def get_word_items(ngram_matrix, word_inds, second_order = False, ignore_frequency = False):
+def get_word_items_unique(ngram_matrix, word_inds, second_order = False, ignore_frequency = False):
     if word_inds: # word_inds provides list of indices from which to derive jaccard matrix
         items = []
         for ind,i in enumerate(word_inds): # for loop converts wd to set
             print(str(ind + 1) + '/' + str(len(word_inds)))
             items.append(get_unique_item_ngram_matrix(ngram_matrix,i,second_order,ignore_frequency))
+        print('finished gathering items')
+    return items
+
+def get_word_items(ngram_matrix, word_inds, second_order = False, ignore_frequency = False):
+    if word_inds: # word_inds provides list of indices from which to derive jaccard matrix
+        items = []
+        for ind,i in enumerate(word_inds): # for loop converts wd to set
+            print(str(ind + 1) + '/' + str(len(word_inds)))
+            items.append(get_item_ngram_matrix(ngram_matrix,i,second_order,ignore_frequency))
         print('finished gathering items')
     return items
     
