@@ -139,6 +139,32 @@ def get_jaccard_1(item_1, item_2):
     
     return jaccard_second_order
 
+def get_jaccard_1_1(item_1, item_2):
+    '''
+    wd: word by document matrix in sparse data structure
+    ind_1: index of first word for comparison
+    ind_2: index of second word for comparison
+    '''
+    
+#    item_1 = items[i]
+#    item_2 = items[j]
+    
+    set_intersection = np.where(cosine_table(item_1,item_2) > 0.99)
+    
+    if(len(set_intersection[0]) == 0) or (len(set_intersection[1]) == 0):
+        return 0
+    
+    num = []
+#    for i in np.arange(len(set_intersection[0])):
+#        num.append(min(item_1[1][set_intersection[0][i]],item_2[1][set_intersection[1][i]]))
+    num = len(set_intersection[0])
+    denom = item_1.shape[0] + item_2.shape[0]
+            # a given context may be repeated in the corpus, treat it
+    
+    jaccard_second_order = num / denom
+    
+    return jaccard_second_order
+
 # jaccard as averaged cosine matrix
 def get_jaccard_2(item_1, item_2):
     '''
@@ -255,11 +281,13 @@ def get_word_items_unique(ngram_matrix, word_inds, second_order = False, ignore_
     return items
 
 def get_word_items(ngram_matrix, word_inds, second_order = False, ignore_frequency = False):
+    print('Gathering Word Items')
     if word_inds: # word_inds provides list of indices from which to derive jaccard matrix
         items = []
         for ind,i in enumerate(word_inds): # for loop converts wd to set
-            print(str(ind + 1) + '/' + str(len(word_inds)))
-            items.append(get_item_ngram_matrix(ngram_matrix,i,second_order,ignore_frequency))
+#            print(str(ind + 1) + '/' + str(len(word_inds)))
+#            items.append(get_item_ngram_matrix(ngram_matrix,i,second_order,ignore_frequency))
+            items.append(get_item_ngram_matrix(ngram_matrix,i,second_order,ignore_frequency)[0])
         print('finished gathering items')
     return items
     

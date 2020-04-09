@@ -80,10 +80,11 @@ def get_expected_vals(first_order,second_order):
     return np.mean(f_[:3] - s_[:3]),np.mean(f_[3:7] - s_[3:7]),np.mean(f_[7:] - s_[7:])
 
 def test_measure(my_func,items_f,items_s):
+    print('  Measuring First Order')
     # first order 
     j_f_ave = np.zeros((len(items_f), len(items_f)))
     for i in np.arange(len(items_f)):
-        print(i)
+#        print(i)
         for j in np.arange(i, len(items_f)):
             j_f_ave[i, j] = my_func(items_f[i], items_f[j])
             j_f_ave[j, i] = j_f_ave[i, j]
@@ -93,9 +94,10 @@ def test_measure(my_func,items_f,items_s):
     j_f_ave.index = list(words)
             
     # second order 
+    print('  Measuring Second Order')
     j_s_ave = np.zeros((len(items_s), len(items_s)))
     for i in np.arange(len(items_s)):
-        print(i)
+#        print(i)
         for j in np.arange(i, len(items_s)):
             j_s_ave[i, j] = my_func(items_s[i], items_s[j])
             j_s_ave[j, i] = j_s_ave[i, j]
@@ -142,18 +144,28 @@ for window_size in np.arange(2,4):
     items_s = jac.get_word_items(wd,[mydict[word] for word in words], second_order = True)
     
     
+    exp_first,exp_second,exp_equal = test_measure(jac.get_jaccard_1_1,items_f,items_s)
+    print('Original')
+    output = output.append({'window_size': window_size,
+                   'measure':'original',
+                   'expected_first(pos)':exp_first,
+                   'expected_second(neg)':exp_second,
+                   'expected_equal':exp_equal},ignore_index=True)
+    print('Mean')
     exp_first,exp_second,exp_equal = test_measure(jac.get_jaccard_2,items_f,items_s)
     output = output.append({'window_size': window_size,
                    'measure':'mean',
                    'expected_first(pos)':exp_first,
                    'expected_second(neg)':exp_second,
                    'expected_equal':exp_equal},ignore_index=True)
+    print('Max')
     exp_first,exp_second,exp_equal = test_measure(jac.get_jaccard_3,items_f,items_s)
     output = output.append({'window_size': window_size,
                    'measure':'max',
                    'expected_first(pos)':exp_first,
                    'expected_second(neg)':exp_second,
                    'expected_equal':exp_equal},ignore_index=True)
+    print('Min')
     exp_first,exp_second,exp_equal = test_measure(jac.get_jaccard_4,items_f,items_s)
     output = output.append({'window_size': window_size,
                    'measure':'min',
@@ -165,6 +177,8 @@ for window_size in np.arange(2,4):
 
 
 
+wd2,mydict2 = pickle.load(open('wd_files/window_2.p','rb'))
+wd3,mydict3 = pickle.load(open('wd_files/window_3.p','rb'))
 
 
 
